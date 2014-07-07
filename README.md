@@ -4,6 +4,7 @@ Gooby
 An experimental rubinius bytecode interpreter in Go.
 
 
+![Gooby](https://raw.githubusercontent.com/vic/gooby/master/gooby.jpg "Gooby")
 
 
 ```shell

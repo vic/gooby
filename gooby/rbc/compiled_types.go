@@ -1,50 +1,50 @@
 package rbc
 
-type compiled_nil struct{}
-type compiled_true struct{}
-type compiled_false struct{}
+type CompiledNil struct{}
+type CompiledTrue struct{}
+type CompiledFalse struct{}
 
-type compiled_int struct {
+type CompiledInt struct {
 	number int
 }
 
-type compiled_rational struct{}
+type CompiledRational struct{}
 
-type compiled_complex struct{}
+type CompiledComplex struct{}
 
-type compiled_string struct {
+type CompiledString struct {
 	value    []byte
-	encoding *compiled_encoding
+	encoding *CompiledEncoding
 }
 
-type compiled_symbol struct {
+type CompiledSymbol struct {
 	name     string
-	encoding *compiled_encoding
+	encoding *CompiledEncoding
 }
 
-type compiled_tuple struct {
+type CompiledTuple struct {
 	items []compiled
 }
 
-type compiled_float struct{}
+type CompiledFloat struct{}
 
-type compiled_iseq struct {
-	iseq []int
+type CompiledISeq struct {
+	opcodes []int
 }
 
-type compiled_constant struct{}
+type CompiledConstant struct{}
 
-type compiled_encoding struct {
+type CompiledEncoding struct {
 	name string
 }
 
-type compiled_file struct {
+type CompiledFile struct {
 	signature uint64
 	version   int
-	body      *compiled_code
+	body      *CompiledCode
 }
 
-type compiled_code struct {
+type CompiledCode struct {
 	metadata      compiled
 	primitive     compiled
 	name          compiled

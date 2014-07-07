@@ -1,33 +1,33 @@
 package rbc
 
-func (s *compiled_nil) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledNil) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_true) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledTrue) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_false) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledFalse) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_int) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledInt) unmarshal(u *unmarshaler) (err error) {
 	s.number, err = u.readInt()
 	return
 }
 
-func (s *compiled_rational) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledRational) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_complex) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledComplex) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_string) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledString) unmarshal(u *unmarshaler) (err error) {
 	p_encoding, err := u.unmarshal()
-	s.encoding, _ = p_encoding.(*compiled_encoding)
+	s.encoding, _ = p_encoding.(*CompiledEncoding)
 	count, err := u.readInt()
 	s.value = make([]byte, count)
 	read_len, err := u.reader.Read(s.value)
@@ -37,14 +37,14 @@ func (s *compiled_string) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_symbol) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledSymbol) unmarshal(u *unmarshaler) (err error) {
 	p_encoding, err := u.unmarshal()
-	s.encoding, _ = p_encoding.(*compiled_encoding)
+	s.encoding, _ = p_encoding.(*CompiledEncoding)
 	s.name, err = u.readString()
 	return
 }
 
-func (s *compiled_tuple) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledTuple) unmarshal(u *unmarshaler) (err error) {
 	count, err := u.readInt()
 	s.items = make([]compiled, count)
 	var comp compiled
@@ -55,41 +55,41 @@ func (s *compiled_tuple) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_float) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledFloat) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_iseq) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledISeq) unmarshal(u *unmarshaler) (err error) {
 	count, err := u.readInt()
-	s.iseq = make([]int, count)
+	s.opcodes = make([]int, count)
 	for i := 0; err == nil && i < count; i++ {
-		s.iseq[i], err = u.readInt()
+		s.opcodes[i], err = u.readInt()
 	}
 	return
 }
 
-func (s *compiled_constant) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledConstant) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_encoding) unmarshal(u *unmarshaler) (err error) {
+func (s *CompiledEncoding) unmarshal(u *unmarshaler) (err error) {
 	s.name, err = u.readString()
 	return
 }
 
-func (cf *compiled_file) unmarshal(reader *unmarshaler) (err error) {
+func (cf *CompiledFile) unmarshal(reader *unmarshaler) (err error) {
 	reader.expectLine(MAGIC)
 
 	cf.signature, err = reader.readUint64()
 	cf.version, err = reader.readInt()
 	body, err := reader.unmarshal()
 
-	cf.body, _ = body.(*compiled_code)
+	cf.body, _ = body.(*CompiledCode)
 
 	return
 }
 
-func (self *compiled_code) unmarshal(reader *unmarshaler) (err error) {
+func (self *CompiledCode) unmarshal(reader *unmarshaler) (err error) {
 	_, err = reader.readInt() // version ignored
 
 	self.metadata, err = reader.unmarshal()

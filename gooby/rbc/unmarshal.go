@@ -18,6 +18,12 @@ type compiled interface {
 	unmarshal(reader *unmarshaler) (err error)
 }
 
+func ReadCompiledFile(filename string) (cf *CompiledFile, err error) {
+	compiled, err := readRbc(filename)
+	cf, _ = compiled.(*CompiledFile)
+	return
+}
+
 func readRbc(filename string) (cf compiled, err error) {
 	file, err := os.Open(filename)
 	defer file.Close()
@@ -31,7 +37,7 @@ func readRbc(filename string) (cf compiled, err error) {
 		reader:   bufio.NewReader(file),
 	}
 
-	cf = &compiled_file{}
+	cf = &CompiledFile{}
 	err = cf.unmarshal(reader)
 
 	return
@@ -48,33 +54,33 @@ func (self *unmarshaler) unmarshal() (val compiled, err error) {
 	case "":
 		return
 	case "n":
-		val = &compiled_nil{}
+		val = &CompiledNil{}
 	case "t":
-		val = &compiled_true{}
+		val = &CompiledTrue{}
 	case "f":
-		val = &compiled_false{}
+		val = &CompiledFalse{}
 	case "I":
-		val = &compiled_int{}
+		val = &CompiledInt{}
 	case "R":
-		val = &compiled_rational{}
+		val = &CompiledRational{}
 	case "C":
-		val = &compiled_complex{}
+		val = &CompiledComplex{}
 	case "s":
-		val = &compiled_string{}
+		val = &CompiledString{}
 	case "x":
-		val = &compiled_symbol{}
+		val = &CompiledSymbol{}
 	case "p":
-		val = &compiled_tuple{}
+		val = &CompiledTuple{}
 	case "d":
-		val = &compiled_float{}
+		val = &CompiledFloat{}
 	case "i":
-		val = &compiled_iseq{}
+		val = &CompiledISeq{}
 	case "M":
-		val = &compiled_code{}
+		val = &CompiledCode{}
 	case "c":
-		val = &compiled_constant{}
+		val = &CompiledConstant{}
 	case "E":
-		val = &compiled_encoding{}
+		val = &CompiledEncoding{}
 	default:
 		failExit("unknown marshal code: ", code)
 	}

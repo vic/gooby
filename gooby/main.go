@@ -1,7 +1,8 @@
 package gooby
 
 import (
-	"./rbc"
+	"./compiler"
+	"./runtime"
 	"github.com/codegangsta/cli"
 	"os"
 )
@@ -17,7 +18,15 @@ func Main() {
 			ShortName: "c",
 			Usage:     "Compile RBX bytecode into Go code",
 			Action: func(c *cli.Context) {
-				rbc.Compile(c.Args().First())
+				compiler.CompileRbc(c.Args().First())
+			},
+		},
+		{
+			Name:      "interpret",
+			ShortName: "i",
+			Usage:     "Interpret RBX bytecode in Go runtime",
+			Action: func(c *cli.Context) {
+				runtime.InterpretRbc(c.Args().First())
 			},
 		},
 	}

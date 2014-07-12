@@ -1,9 +1,9 @@
 package runtime
 
 import (
-	"../rbc"
-	"../vm"
 	"fmt"
+	"github.com/vic/gooby/rbc"
+	"github.com/vic/gooby/vm"
 )
 
 func InterpretRbc(filename string) {

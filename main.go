@@ -1,9 +1,9 @@
 package gooby
 
 import (
-	"./compiler"
-	"./runtime"
 	"github.com/codegangsta/cli"
+	"github.com/vic/gooby/compiler"
+	"github.com/vic/gooby/runtime"
 	"os"
 )
 

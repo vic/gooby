@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"../rbc"
 	"fmt"
+	"github.com/vic/gooby/rbc"
 )
 
 func CompileRbc(filename string) {

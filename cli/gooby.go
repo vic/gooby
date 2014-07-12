@@ -1,6 +1,6 @@
 package main
 
-import "../gooby"
+import "github.com/vic/gooby"
 
 func main() {
 	gooby.Main()

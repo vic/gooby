@@ -18,9 +18,9 @@ type compiled interface {
 	unmarshal(reader *unmarshaler) (err error)
 }
 
-func ReadCompiledFile(filename string) (cf *CompiledFile, err error) {
+func ReadFile(filename string) (cf *File, err error) {
 	compiled, err := readRbc(filename)
-	cf, _ = compiled.(*CompiledFile)
+	cf, _ = compiled.(*File)
 	return
 }
 
@@ -29,7 +29,7 @@ func readRbc(filename string) (cf compiled, err error) {
 	defer file.Close()
 
 	if err != nil {
-		failExit("Could not open", filename)
+		panicln("Could not open", filename)
 	}
 
 	reader := &unmarshaler{
@@ -37,15 +37,14 @@ func readRbc(filename string) (cf compiled, err error) {
 		reader:   bufio.NewReader(file),
 	}
 
-	cf = &CompiledFile{}
+	cf = &File{}
 	err = cf.unmarshal(reader)
 
 	return
 }
 
-func failExit(args ...interface{}) {
-	fmt.Fprintln(os.Stderr, args...)
-	os.Exit(1)
+func panicln(args ...interface{}) {
+	panic(fmt.Sprintln(args...))
 }
 
 func (self *unmarshaler) unmarshal() (val compiled, err error) {
@@ -54,35 +53,35 @@ func (self *unmarshaler) unmarshal() (val compiled, err error) {
 	case "":
 		return
 	case "n":
-		val = &CompiledNil{}
+		val = &Nil{}
 	case "t":
-		val = &CompiledTrue{}
+		val = &True{}
 	case "f":
-		val = &CompiledFalse{}
+		val = &False{}
 	case "I":
-		val = &CompiledInt{}
+		val = &Int{}
 	case "R":
-		val = &CompiledRational{}
+		val = &Rational{}
 	case "C":
-		val = &CompiledComplex{}
+		val = &Complex{}
 	case "s":
-		val = &CompiledString{}
+		val = &String{}
 	case "x":
-		val = &CompiledSymbol{}
+		val = &Symbol{}
 	case "p":
-		val = &CompiledTuple{}
+		val = &Tuple{}
 	case "d":
-		val = &CompiledFloat{}
+		val = &Float{}
 	case "i":
-		val = &CompiledISeq{}
+		val = &ISeq{}
 	case "M":
-		val = &CompiledCode{}
+		val = &Code{}
 	case "c":
-		val = &CompiledConstant{}
+		val = &Constant{}
 	case "E":
-		val = &CompiledEncoding{}
+		val = &Encoding{}
 	default:
-		failExit("unknown marshal code: ", code)
+		panicln("unknown marshal code: ", code)
 	}
 	if err == nil {
 		err = val.unmarshal(self)
@@ -93,7 +92,7 @@ func (self *unmarshaler) unmarshal() (val compiled, err error) {
 func (self *unmarshaler) expectLine(expected string) {
 	line, err := self.readLine()
 	if err != nil || line != expected {
-		failExit("Expected", expected, "in", self.filename)
+		panicln("Expected", expected, "in", self.filename)
 	}
 }
 
@@ -128,7 +127,7 @@ func (self *unmarshaler) readString() (val string, err error) {
 	var bytes = make([]byte, count)
 	read_len, err := self.reader.Read(bytes)
 	if read_len != count {
-		failExit("Expected to find", count, "bytes but only got", read_len)
+		panicln("Expected to find", count, "bytes but only got", read_len)
 	}
 	val = string(bytes)
 	self.expectLine("")

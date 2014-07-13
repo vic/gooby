@@ -1,64 +1,65 @@
 package rbc
 
-type CompiledNil struct{}
-type CompiledTrue struct{}
-type CompiledFalse struct{}
+type Nil struct{}
+type True struct{}
+type False struct{}
 
-type CompiledInt struct {
-	number int
+type Int struct {
+	Value int
 }
 
-type CompiledRational struct{}
+type Rational struct{}
 
-type CompiledComplex struct{}
+type Complex struct{}
 
-type CompiledString struct {
-	value    []byte
-	encoding *CompiledEncoding
+type String struct {
+	Bytes    []byte
+	Encoding *Encoding
 }
 
-type CompiledSymbol struct {
-	name     string
-	encoding *CompiledEncoding
+type Symbol struct {
+	Bytes    []byte
+	Encoding *Encoding
 }
 
-type CompiledTuple struct {
-	items []compiled
+type Tuple struct {
+	Items []compiled
 }
 
-type CompiledFloat struct{}
+type Float struct{}
 
-type CompiledISeq struct {
-	opcodes []int
+type ISeq struct {
+	Opcodes []int
 }
 
-type CompiledConstant struct{}
+type Constant struct{}
 
-type CompiledEncoding struct {
-	name string
+type Encoding struct {
+	Name string
 }
 
-type CompiledFile struct {
-	signature uint64
-	version   int
-	body      *CompiledCode
+type File struct {
+	Signature uint64
+	Version   int
+	Body      *Code
 }
 
-type CompiledCode struct {
-	metadata      compiled
-	primitive     compiled
-	name          compiled
-	iseq          compiled
-	stack_size    compiled
-	local_count   compiled
-	required_args compiled
-	post_args     compiled
-	total_args    compiled
-	splat         compiled
-	keywords      compiled
-	arity         compiled
-	literals      compiled
-	lines         compiled
-	file          compiled
-	local_names   compiled
+type Code struct {
+	Version      int
+	Metadata     compiled
+	Primitive    *Symbol
+	Name         *Symbol
+	ISeq         *ISeq
+	StackSize    *Int
+	LocalCount   *Int
+	RequiredArgs *Int
+	PostArgs     *Int
+	TotalArgs    *Int
+	Splat        *Int
+	Keywords     *Tuple
+	Arity        *Int
+	Literals     *Tuple
+	Lines        *Tuple
+	File         *Symbol
+	LocalNames   *Tuple
 }

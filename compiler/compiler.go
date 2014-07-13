@@ -6,6 +6,6 @@ import (
 )
 
 func CompileRbc(filename string) {
-	cf, _ := rbc.ReadCompiledFile(filename)
+	cf, _ := rbc.ReadFile(filename)
 	fmt.Println(cf)
 }

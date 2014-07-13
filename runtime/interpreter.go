@@ -7,7 +7,7 @@ import (
 )
 
 func InterpretRbc(filename string) {
-	cf, _ := rbc.ReadCompiledFile(filename)
+	cf, _ := rbc.ReadFile(filename)
 	vm := vm.NewVM()
 	fmt.Print("Load compiled file into vm ", cf, vm)
 }

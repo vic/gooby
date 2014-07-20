@@ -1,151 +1,151 @@
 package rbc
 
-func (s *Nil) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_nil) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *True) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_true) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *False) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_false) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *Int) unmarshal(u *unmarshaler) (err error) {
-	s.Value, err = u.readInt()
+func (s *compiled_int) unmarshal(u *unmarshaler) (err error) {
+	s.value, err = u.readInt()
 	return
 }
 
-func (s *Rational) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_rational) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *Complex) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_complex) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *String) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_string) unmarshal(u *unmarshaler) (err error) {
 	compiled, err := u.unmarshal()
-	s.Encoding, _ = compiled.(*Encoding)
+	s.encoding, _ = compiled.(*compiled_encoding)
 	count, err := u.readInt()
-	s.Bytes = make([]byte, count)
-	read_len, err := u.reader.Read(s.Bytes)
+	s.bytes = make([]byte, count)
+	read_len, err := u.reader.Read(s.bytes)
 	if read_len != count {
 		panicln("Expected to find", count, "bytes but only got", read_len)
 	}
 	return
 }
 
-func (s *Symbol) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_symbol) unmarshal(u *unmarshaler) (err error) {
 	compiled, err := u.unmarshal()
-	s.Encoding, _ = compiled.(*Encoding)
+	s.encoding, _ = compiled.(*compiled_encoding)
 	count, err := u.readInt()
-	s.Bytes = make([]byte, count)
-	read_len, err := u.reader.Read(s.Bytes)
+	s.bytes = make([]byte, count)
+	read_len, err := u.reader.Read(s.bytes)
 	if read_len != count {
 		panicln("Expected to find", count, "bytes but only got", read_len)
 	}
 	return
 }
 
-func (s *Tuple) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_tuple) unmarshal(u *unmarshaler) (err error) {
 	count, err := u.readInt()
-	s.Items = make([]compiled, count)
+	s.items = make([]compiled, count)
 	var comp compiled
 	for i := 0; err == nil && i < count; i++ {
 		comp, err = u.unmarshal()
-		s.Items[i] = comp
+		s.items[i] = comp
 	}
 	return
 }
 
-func (s *Float) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_float) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *ISeq) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_iseq) unmarshal(u *unmarshaler) (err error) {
 	count, err := u.readInt()
-	s.Opcodes = make([]int, count)
+	s.opcodes = make([]int, count)
 	for i := 0; err == nil && i < count; i++ {
-		s.Opcodes[i], err = u.readInt()
+		s.opcodes[i], err = u.readInt()
 	}
 	return
 }
 
-func (s *Constant) unmarshal(u *unmarshaler) (err error) {
+func (s *compiled_constant) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *Encoding) unmarshal(u *unmarshaler) (err error) {
-	s.Name, err = u.readString()
+func (s *compiled_encoding) unmarshal(u *unmarshaler) (err error) {
+	s.name, err = u.readString()
 	return
 }
 
-func (cf *File) unmarshal(reader *unmarshaler) (err error) {
+func (cf *compiled_file) unmarshal(reader *unmarshaler) (err error) {
 	reader.expectLine(MAGIC)
 
-	cf.Signature, err = reader.readUint64()
-	cf.Version, err = reader.readInt()
+	cf.signature, err = reader.readUint64()
+	cf.version, err = reader.readInt()
 	body, err := reader.unmarshal()
 
-	cf.Body, _ = body.(*Code)
+	cf.body, _ = body.(*compiled_code)
 
 	return
 }
 
-func (self *Code) unmarshal(reader *unmarshaler) (err error) {
+func (self *compiled_code) unmarshal(reader *unmarshaler) (err error) {
 	var comp compiled
-	if self.Version, err = reader.readInt(); err != nil {
+	if self.version, err = reader.readInt(); err != nil {
 		return
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Metadata = comp
+		self.metadata = comp
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Primitive, _ = comp.(*Symbol)
+		self.primitive, _ = comp.(*compiled_symbol)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Name, _ = comp.(*Symbol)
+		self.name, _ = comp.(*compiled_symbol)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.ISeq, _ = comp.(*ISeq)
+		self.iseq, _ = comp.(*compiled_iseq)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.StackSize, _ = comp.(*Int)
+		self.stackSize, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.LocalCount, _ = comp.(*Int)
+		self.localCount, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.RequiredArgs, _ = comp.(*Int)
+		self.requiredArgs, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.PostArgs, _ = comp.(*Int)
+		self.postArgs, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.TotalArgs, _ = comp.(*Int)
+		self.totalArgs, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Splat, _ = comp.(*Int)
+		self.splat, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Keywords, _ = comp.(*Tuple)
+		self.keywords, _ = comp.(*compiled_tuple)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Arity, _ = comp.(*Int)
+		self.arity, _ = comp.(*compiled_int)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Literals, _ = comp.(*Tuple)
+		self.literals, _ = comp.(*compiled_tuple)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.Lines, _ = comp.(*Tuple)
+		self.lines, _ = comp.(*compiled_tuple)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.File, _ = comp.(*Symbol)
+		self.file, _ = comp.(*compiled_symbol)
 	}
 	if comp, err = reader.unmarshal(); err == nil {
-		self.LocalNames, _ = comp.(*Tuple)
+		self.localNames, _ = comp.(*compiled_tuple)
 	}
 
 	return

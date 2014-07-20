@@ -1,65 +1,26 @@
 package rbc
 
-type Nil struct{}
-type True struct{}
-type False struct{}
+import (
+	"fmt"
+)
 
-type Int struct {
-	Value int
+type File interface {
+	Version() int
+	Body() Method
 }
 
-type Rational struct{}
-
-type Complex struct{}
-
-type String struct {
-	Bytes    []byte
-	Encoding *Encoding
+type Method interface {
+	String() string
 }
 
-type Symbol struct {
-	Bytes    []byte
-	Encoding *Encoding
+func (self *compiled_file) Version() int {
+	return self.version
 }
 
-type Tuple struct {
-	Items []compiled
+func (self *compiled_file) Body() Method {
+	return self.body
 }
 
-type Float struct{}
-
-type ISeq struct {
-	Opcodes []int
-}
-
-type Constant struct{}
-
-type Encoding struct {
-	Name string
-}
-
-type File struct {
-	Signature uint64
-	Version   int
-	Body      *Code
-}
-
-type Code struct {
-	Version      int
-	Metadata     compiled
-	Primitive    *Symbol
-	Name         *Symbol
-	ISeq         *ISeq
-	StackSize    *Int
-	LocalCount   *Int
-	RequiredArgs *Int
-	PostArgs     *Int
-	TotalArgs    *Int
-	Splat        *Int
-	Keywords     *Tuple
-	Arity        *Int
-	Literals     *Tuple
-	Lines        *Tuple
-	File         *Symbol
-	LocalNames   *Tuple
+func (self *compiled_code) String() string {
+	return fmt.Sprintf("%s", self.name.bytes)
 }

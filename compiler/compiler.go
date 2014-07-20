@@ -7,5 +7,5 @@ import (
 
 func CompileRbc(filename string) {
 	cf, _ := rbc.ReadFile(filename)
-	fmt.Println(cf)
+	fmt.Println(cf.Body())
 }

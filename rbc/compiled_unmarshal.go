@@ -1,5 +1,7 @@
 package rbc
 
+import "errors"
+
 func (s *compiled_nil) unmarshal(u *unmarshaler) (err error) {
 	return
 }
@@ -25,27 +27,36 @@ func (s *compiled_complex) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_string) unmarshal(u *unmarshaler) (err error) {
-	compiled, err := u.unmarshal()
-	s.encoding, _ = compiled.(*compiled_encoding)
-	count, err := u.readInt()
-	s.bytes = make([]byte, count)
-	read_len, err := u.reader.Read(s.bytes)
+func unmarshal_encoded(u *unmarshaler) (bytes []byte, encoding string, err error) {
+	var compiled compiled
+	var count int
+	if compiled, err = u.unmarshal(); err != nil {
+		return
+	}
+	if comp_encoding, ok := compiled.(*compiled_encoding); ok {
+		encoding = comp_encoding.name
+	} else {
+		return
+	}
+	if count, err = u.readInt(); err == nil {
+		bytes = make([]byte, count)
+	} else {
+		return
+	}
+	read_len, err := u.reader.Read(bytes)
 	if read_len != count {
-		panicln("Expected to find", count, "bytes but only got", read_len)
+		err = errors.New("Could not read all bytes")
 	}
 	return
 }
 
+func (s *compiled_string) unmarshal(u *unmarshaler) (err error) {
+	s.bytes, s.encoding, err = unmarshal_encoded(u)
+	return
+}
+
 func (s *compiled_symbol) unmarshal(u *unmarshaler) (err error) {
-	compiled, err := u.unmarshal()
-	s.encoding, _ = compiled.(*compiled_encoding)
-	count, err := u.readInt()
-	s.bytes = make([]byte, count)
-	read_len, err := u.reader.Read(s.bytes)
-	if read_len != count {
-		panicln("Expected to find", count, "bytes but only got", read_len)
-	}
+	s.bytes, s.encoding, err = unmarshal_encoded(u)
 	return
 }
 
@@ -84,69 +95,69 @@ func (s *compiled_encoding) unmarshal(u *unmarshaler) (err error) {
 
 func (cf *compiled_file) unmarshal(reader *unmarshaler) (err error) {
 	reader.expectLine(MAGIC)
-
-	cf.signature, err = reader.readUint64()
-	cf.version, err = reader.readInt()
-	body, err := reader.unmarshal()
-
-	cf.body, _ = body.(*compiled_code)
-
+	if cf.signature, err = reader.readUint64(); err != nil {
+		return
+	}
+	if cf.version, err = reader.readInt(); err != nil {
+		return
+	}
+	if cf.body, err = reader.unmarshal(); err != nil {
+		return
+	}
 	return
 }
 
-func (self *compiled_code) unmarshal(reader *unmarshaler) (err error) {
-	var comp compiled
+func (self *compiled_method) unmarshal(reader *unmarshaler) (err error) {
 	if self.version, err = reader.readInt(); err != nil {
 		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.metadata = comp
+	if self.metadata, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.primitive, _ = comp.(*compiled_symbol)
+	if self.primitive, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.name, _ = comp.(*compiled_symbol)
+	if self.name, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.iseq, _ = comp.(*compiled_iseq)
+	if self.iseq, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.stackSize, _ = comp.(*compiled_int)
+	if self.stackSize, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.localCount, _ = comp.(*compiled_int)
+	if self.localCount, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.requiredArgs, _ = comp.(*compiled_int)
+	if self.requiredArgs, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.postArgs, _ = comp.(*compiled_int)
+	if self.postArgs, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.totalArgs, _ = comp.(*compiled_int)
+	if self.totalArgs, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.splat, _ = comp.(*compiled_int)
+	if self.splat, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.keywords, _ = comp.(*compiled_tuple)
+	if self.keywords, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.arity, _ = comp.(*compiled_int)
+	if self.arity, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.literals, _ = comp.(*compiled_tuple)
+	if self.literals, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.lines, _ = comp.(*compiled_tuple)
+	if self.lines, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.file, _ = comp.(*compiled_symbol)
+	if self.file, err = reader.unmarshal(); err != nil {
+		return
 	}
-	if comp, err = reader.unmarshal(); err == nil {
-		self.localNames, _ = comp.(*compiled_tuple)
+	if self.localNames, err = reader.unmarshal(); err != nil {
+		return
 	}
-
 	return
 }

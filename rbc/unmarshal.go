@@ -76,7 +76,7 @@ func (self *unmarshaler) unmarshal() (val compiled, err error) {
 	case "i":
 		val = &compiled_iseq{}
 	case "M":
-		val = &compiled_code{}
+		val = &compiled_method{}
 	case "c":
 		val = &compiled_constant{}
 	case "E":

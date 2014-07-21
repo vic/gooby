@@ -14,12 +14,16 @@ type compiled_complex struct{}
 
 type compiled_string struct {
 	bytes    []byte
-	encoding *compiled_encoding
+	encoding string
 }
 
 type compiled_symbol struct {
 	bytes    []byte
-	encoding *compiled_encoding
+	encoding string
+}
+
+type compiled_encoding struct {
+	name string
 }
 
 type compiled_tuple struct {
@@ -34,32 +38,28 @@ type compiled_iseq struct {
 
 type compiled_constant struct{}
 
-type compiled_encoding struct {
-	name string
-}
-
 type compiled_file struct {
 	signature uint64
 	version   int
-	body      *compiled_code
+	body      compiled
 }
 
-type compiled_code struct {
+type compiled_method struct {
 	version      int
 	metadata     compiled
-	primitive    *compiled_symbol
-	name         *compiled_symbol
-	iseq         *compiled_iseq
-	stackSize    *compiled_int
-	localCount   *compiled_int
-	requiredArgs *compiled_int
-	postArgs     *compiled_int
-	totalArgs    *compiled_int
-	splat        *compiled_int
-	keywords     *compiled_tuple
-	arity        *compiled_int
-	literals     *compiled_tuple
-	lines        *compiled_tuple
-	file         *compiled_symbol
-	localNames   *compiled_tuple
+	primitive    compiled
+	name         compiled
+	iseq         compiled
+	stackSize    compiled
+	localCount   compiled
+	requiredArgs compiled
+	postArgs     compiled
+	totalArgs    compiled
+	splat        compiled
+	keywords     compiled
+	arity        compiled
+	literals     compiled
+	lines        compiled
+	file         compiled
+	localNames   compiled
 }

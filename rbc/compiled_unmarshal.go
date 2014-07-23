@@ -1,6 +1,8 @@
 package rbc
 
-import "errors"
+import (
+	"errors"
+)
 
 func (s *compiled_nil) unmarshal(u *unmarshaler) (err error) {
 	return
@@ -15,7 +17,7 @@ func (s *compiled_false) unmarshal(u *unmarshaler) (err error) {
 }
 
 func (s *compiled_int) unmarshal(u *unmarshaler) (err error) {
-	s.value, err = u.readInt()
+	s.value, err = u.readInt(16)
 	return
 }
 
@@ -36,9 +38,10 @@ func unmarshal_encoded(u *unmarshaler) (bytes []byte, encoding string, err error
 	if comp_encoding, ok := compiled.(*compiled_encoding); ok {
 		encoding = comp_encoding.name
 	} else {
+		err = errors.New("Could not read encoding")
 		return
 	}
-	if count, err = u.readInt(); err == nil {
+	if count, err = u.readInt(10); err == nil {
 		bytes = make([]byte, count)
 	} else {
 		return
@@ -47,6 +50,7 @@ func unmarshal_encoded(u *unmarshaler) (bytes []byte, encoding string, err error
 	if read_len != count {
 		err = errors.New("Could not read all bytes")
 	}
+	u.expectLine("")
 	return
 }
 
@@ -60,8 +64,13 @@ func (s *compiled_symbol) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
+func (s *compiled_encoding) unmarshal(u *unmarshaler) (err error) {
+	s.name, err = u.readString()
+	return
+}
+
 func (s *compiled_tuple) unmarshal(u *unmarshaler) (err error) {
-	count, err := u.readInt()
+	count, err := u.readInt(10)
 	s.items = make([]compiled, count)
 	var comp compiled
 	for i := 0; err == nil && i < count; i++ {
@@ -76,10 +85,13 @@ func (s *compiled_float) unmarshal(u *unmarshaler) (err error) {
 }
 
 func (s *compiled_iseq) unmarshal(u *unmarshaler) (err error) {
-	count, err := u.readInt()
+	var count int
+	if count, err = u.readInt(10); err != nil {
+		return
+	}
 	s.opcodes = make([]int, count)
 	for i := 0; err == nil && i < count; i++ {
-		s.opcodes[i], err = u.readInt()
+		s.opcodes[i], err = u.readInt(10)
 	}
 	return
 }
@@ -88,17 +100,12 @@ func (s *compiled_constant) unmarshal(u *unmarshaler) (err error) {
 	return
 }
 
-func (s *compiled_encoding) unmarshal(u *unmarshaler) (err error) {
-	s.name, err = u.readString()
-	return
-}
-
 func (cf *compiled_file) unmarshal(reader *unmarshaler) (err error) {
 	reader.expectLine(MAGIC)
 	if cf.signature, err = reader.readUint64(); err != nil {
 		return
 	}
-	if cf.version, err = reader.readInt(); err != nil {
+	if cf.version, err = reader.readInt(10); err != nil {
 		return
 	}
 	if cf.body, err = reader.unmarshal(); err != nil {
@@ -108,7 +115,7 @@ func (cf *compiled_file) unmarshal(reader *unmarshaler) (err error) {
 }
 
 func (self *compiled_method) unmarshal(reader *unmarshaler) (err error) {
-	if self.version, err = reader.readInt(); err != nil {
+	if self.version, err = reader.readInt(10); err != nil {
 		return
 	}
 	if self.metadata, err = reader.unmarshal(); err != nil {

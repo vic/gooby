@@ -1,22 +1,27 @@
 package compiler
 
 import (
-	"fmt"
+	_ "fmt"
 	"github.com/vic/gooby/rbc"
 	"go/ast"
 	"go/format"
 	"go/token"
 	"os"
+	"strconv"
 )
 
-func CompileRbc(filename string) {
-	cf, _ := rbc.ReadFile(filename)
+func CompileRbc(filename string) (err error) {
+	cf, err := rbc.ReadFile(filename)
+	if err != nil {
+		return
+	}
+
 	compiler := &file_compiler{cf}
 	file := compiler.compile(filename)
 
-	fmt.Println("/* " + filename + " */")
-	format.Node(os.Stdout, nil, file)
-	fmt.Print("\n")
+	fset := token.NewFileSet()
+	format.Node(os.Stdout, fset, file)
+	return
 }
 
 type file_compiler struct{ rbc.File }
@@ -27,7 +32,7 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 		Name: ast.NewIdent("gooby"),
 		Path: &ast.BasicLit{
 			Kind:  token.STRING,
-			Value: "\"github.com/vic/gooby\"",
+			Value: "\"github.com/vic/gooby/vm\"",
 		},
 	}
 
@@ -41,7 +46,7 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 			Type: &ast.StructType{
 				Fields: &ast.FieldList{
 					List: []*ast.Field{
-						&ast.Field{Type: &ast.StarExpr{X: ast.NewIdent("gooby.VM")}},
+						&ast.Field{Type: ast.NewIdent("gooby.VM")},
 					},
 				},
 			},
@@ -61,13 +66,52 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 }
 
 func (self method_compiler) compile() (f *ast.FuncDecl) {
+	su := &stack_usage{
+		max:      self.StackSize(),
+		compiler: self,
+	}
+
 	f = &ast.FuncDecl{
 		Name: ast.NewIdent(self.Name()),
+		Recv: &ast.FieldList{
+			List: []*ast.Field{},
+		},
 		Type: &ast.FuncType{
 			Params: &ast.FieldList{
 				List: []*ast.Field{},
 			},
 		},
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{su.local_var_decls()},
+		},
 	}
 	return f
+}
+
+type stack_usage struct {
+	max      int
+	used     int
+	compiler method_compiler
+}
+
+func (su *stack_usage) local_var_decls() (decl ast.Stmt) {
+	if su.max < 1 {
+		return &ast.EmptyStmt{}
+	}
+	names := make([]*ast.Ident, su.max)
+	for i := 0; i < su.max; i++ {
+		names[i] = ast.NewIdent("rb" + strconv.Itoa(i))
+	}
+	names_spec := ast.ValueSpec{
+		Names: names,
+		Type:  ast.NewIdent("gooby.Object"),
+	}
+	vars := ast.GenDecl{
+		Tok:   token.VAR,
+		Specs: []ast.Spec{&names_spec},
+	}
+	decl = &ast.DeclStmt{
+		Decl: &vars,
+	}
+	return
 }

@@ -2,6 +2,7 @@ package rbc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -27,11 +28,10 @@ func ReadFile(filename string) (cf File, err error) {
 
 func readRbc(filename string) (cf compiled, err error) {
 	file, err := os.Open(filename)
-	defer file.Close()
-
 	if err != nil {
-		panicln("Could not open", filename)
+		return
 	}
+	defer file.Close()
 
 	reader := &unmarshaler{
 		filename: filename,
@@ -44,15 +44,12 @@ func readRbc(filename string) (cf compiled, err error) {
 	return
 }
 
-func panicln(args ...interface{}) {
-	panic(fmt.Sprintln(args...))
-}
-
 func (self *unmarshaler) unmarshal() (val compiled, err error) {
 	code, err := self.readLine()
-	switch code {
-	case "":
+	if err != nil {
 		return
+	}
+	switch code {
 	case "n":
 		val = &compiled_nil{}
 	case "t":
@@ -82,7 +79,7 @@ func (self *unmarshaler) unmarshal() (val compiled, err error) {
 	case "E":
 		val = &compiled_encoding{}
 	default:
-		panicln("unknown marshal code: ", code)
+		err = errors.New("unknown marshal code: " + code)
 	}
 	if err == nil {
 		err = val.unmarshal(self)
@@ -93,7 +90,7 @@ func (self *unmarshaler) unmarshal() (val compiled, err error) {
 func (self *unmarshaler) expectLine(expected string) {
 	line, err := self.readLine()
 	if err != nil || line != expected {
-		panicln("Expected", expected, "in", self.filename)
+		panic(fmt.Sprintf("%s: expected '%s' but got '%s'", self.filename, expected, line))
 	}
 }
 
@@ -114,21 +111,24 @@ func (self *unmarshaler) readUint64() (val uint64, err error) {
 	return
 }
 
-func (self *unmarshaler) readInt() (val int, err error) {
+func (self *unmarshaler) readInt(base int) (val int, err error) {
 	line, err := self.readLine()
 	if err != nil {
 		return
 	}
-	val, err = strconv.Atoi(line)
+	if i, err := strconv.ParseInt(line, base, 0); err == nil {
+		val = int(i)
+	}
 	return
 }
 
 func (self *unmarshaler) readString() (val string, err error) {
-	count, err := self.readInt()
+	count, err := self.readInt(10)
 	var bytes = make([]byte, count)
 	read_len, err := self.reader.Read(bytes)
 	if read_len != count {
-		panicln("Expected to find", count, "bytes but only got", read_len)
+		err = errors.New("Could not read all bytes")
+		return
 	}
 	val = string(bytes)
 	self.expectLine("")

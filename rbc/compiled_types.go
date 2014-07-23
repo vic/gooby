@@ -13,6 +13,7 @@ type Method interface {
 	Name() string
 	FileName() string
 	StackSize() int
+	ISeq() []int
 }
 
 type String interface {
@@ -40,6 +41,13 @@ func (self *compiled_method) Name() string {
 
 func (self *compiled_method) StackSize() int {
 	return _int(self.stackSize)
+}
+
+func (self *compiled_method) ISeq() []int {
+	if is, ok := self.iseq.(*compiled_iseq); ok {
+		return is.opcodes
+	}
+	return []int{}
 }
 
 func (self *compiled_symbol) String() string {

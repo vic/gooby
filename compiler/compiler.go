@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	_ "fmt"
+	"fmt"
 	"github.com/vic/gooby/rbc"
 	"go/ast"
 	"go/format"
@@ -32,7 +32,7 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 		Name: ast.NewIdent("gooby"),
 		Path: &ast.BasicLit{
 			Kind:  token.STRING,
-			Value: "\"github.com/vic/gooby/vm\"",
+			Value: "\"github.com/vic/gooby/runtime\"",
 		},
 	}
 
@@ -42,11 +42,11 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 	local_vm_decl := &ast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []ast.Spec{&ast.TypeSpec{
-			Name: ast.NewIdent("vm"),
+			Name: ast.NewIdent("runtime"),
 			Type: &ast.StructType{
 				Fields: &ast.FieldList{
 					List: []*ast.Field{
-						&ast.Field{Type: ast.NewIdent("gooby.VM")},
+						&ast.Field{Type: ast.NewIdent("gooby.Runtime")},
 					},
 				},
 			},
@@ -66,26 +66,24 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 }
 
 func (self method_compiler) compile() (f *ast.FuncDecl) {
-	su := &stack_usage{
-		max:      self.StackSize(),
-		compiler: self,
-	}
+	su := &stack_usage{max: self.StackSize()}
 
 	params := []*ast.Field{}
 	returns := []*ast.Field{}
 
 	returns = append(returns,
 		&ast.Field{
-			Names: []*ast.Ident{ast.NewIdent("result")},
+			Names: []*ast.Ident{ast.NewIdent("res")},
 			Type:  ast.NewIdent("gooby.Object"),
 		},
 		&ast.Field{
 			Names: []*ast.Ident{ast.NewIdent("err")},
-			Type:  ast.NewIdent("error"),
+			Type:  ast.NewIdent("gooby.Error"),
 		},
 	)
 
-	body := []ast.Stmt{su.local_var_decls()}
+	body := []ast.Stmt{self.local_var_decls(su)}
+	self.append_instructions(su, &body)
 	body = append(body, &ast.ReturnStmt{})
 
 	f = &ast.FuncDecl{
@@ -93,8 +91,8 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 		Recv: &ast.FieldList{
 			List: []*ast.Field{
 				&ast.Field{
-					Names: []*ast.Ident{ast.NewIdent("vm")},
-					Type:  ast.NewIdent("vm"),
+					Names: []*ast.Ident{ast.NewIdent("rt")},
+					Type:  ast.NewIdent("runtime"),
 				},
 			},
 		},
@@ -114,12 +112,11 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 }
 
 type stack_usage struct {
-	max      int
-	used     int
-	compiler method_compiler
+	max  int
+	used int
 }
 
-func (su *stack_usage) local_var_decls() (decl ast.Stmt) {
+func (self method_compiler) local_var_decls(su *stack_usage) (decl ast.Stmt) {
 	if su.max < 1 {
 		return &ast.EmptyStmt{}
 	}
@@ -139,4 +136,11 @@ func (su *stack_usage) local_var_decls() (decl ast.Stmt) {
 		Decl: &vars,
 	}
 	return
+}
+
+func (self method_compiler) append_instructions(su *stack_usage, body *[]ast.Stmt) {
+	iseq := self.ISeq()
+	for _, opcode := range iseq {
+		fmt.Println(opcode)
+	}
 }

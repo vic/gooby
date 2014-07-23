@@ -71,18 +71,43 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 		compiler: self,
 	}
 
+	params := []*ast.Field{}
+	returns := []*ast.Field{}
+
+	returns = append(returns,
+		&ast.Field{
+			Names: []*ast.Ident{ast.NewIdent("result")},
+			Type:  ast.NewIdent("gooby.Object"),
+		},
+		&ast.Field{
+			Names: []*ast.Ident{ast.NewIdent("err")},
+			Type:  ast.NewIdent("error"),
+		},
+	)
+
+	body := []ast.Stmt{su.local_var_decls()}
+	body = append(body, &ast.ReturnStmt{})
+
 	f = &ast.FuncDecl{
 		Name: ast.NewIdent(self.Name()),
 		Recv: &ast.FieldList{
-			List: []*ast.Field{},
+			List: []*ast.Field{
+				&ast.Field{
+					Names: []*ast.Ident{ast.NewIdent("vm")},
+					Type:  ast.NewIdent("vm"),
+				},
+			},
 		},
 		Type: &ast.FuncType{
 			Params: &ast.FieldList{
-				List: []*ast.Field{},
+				List: params,
+			},
+			Results: &ast.FieldList{
+				List: returns,
 			},
 		},
 		Body: &ast.BlockStmt{
-			List: []ast.Stmt{su.local_var_decls()},
+			List: body,
 		},
 	}
 	return f

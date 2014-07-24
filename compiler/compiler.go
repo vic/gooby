@@ -34,7 +34,7 @@ func (self *file_compiler) compile(filename string) (f *ast.File) {
 		},
 	}
 
-	body_compiler := &method_compiler{self.Method(), 0, &[]ast.Stmt{}}
+	body_compiler := &method_compiler{self.Method(), 0, []ast.Stmt{}}
 	script_decl := body_compiler.compile()
 
 	local_vm_decl := &ast.GenDecl{

@@ -10,7 +10,7 @@ import (
 type method_compiler struct {
 	rbc.Method
 	stack_used int
-	body       *[]ast.Stmt
+	body       []ast.Stmt
 }
 
 func (self method_compiler) compile() (f *ast.FuncDecl) {
@@ -29,8 +29,9 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 		},
 	)
 
-	self.append_stmt(self.local_var_decls())
-	self.append_stmt(&ast.ReturnStmt{})
+	self.body = append(self.body, self.local_var_decls())
+	self.compile_instructions()
+	self.body = append(self.body, &ast.ReturnStmt{})
 
 	f = &ast.FuncDecl{
 		Name: ast.NewIdent(self.Name()),
@@ -51,7 +52,7 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 			},
 		},
 		Body: &ast.BlockStmt{
-			List: *self.body,
+			List: self.body,
 		},
 	}
 	return f
@@ -79,12 +80,7 @@ func (self method_compiler) local_var_decls() (decl ast.Stmt) {
 	return
 }
 
-func (self method_compiler) append_stmt(stmt ast.Stmt) {
-	body := append(*self.body, stmt)
-	self.body = &body
-}
-
-func (self method_compiler) append_instructions() {
+func (self method_compiler) compile_instructions() {
 	iseq := self.ISeq()
 	for _, opcode := range iseq {
 		compiler := opcode_compilers[opcode]

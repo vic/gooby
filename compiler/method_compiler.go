@@ -10,8 +10,15 @@ import (
 
 type method_compiler struct {
 	rbc.Method
-	stack_used int
-	body       *[]ast.Stmt
+	stack_top int
+	body      *[]ast.Stmt
+	iseq      *[]int
+}
+
+func new_method_compiler(method rbc.Method) (c *method_compiler) {
+	iseq := method.ISeq()[:]
+	c = &method_compiler{method, 0, &[]ast.Stmt{}, &iseq}
+	return
 }
 
 func (self method_compiler) compile() (f *ast.FuncDecl) {
@@ -81,10 +88,18 @@ func (self method_compiler) local_var_decls() (decl ast.Stmt) {
 	return
 }
 
+func (self method_compiler) shift_iseq() (val int) {
+	val = (*self.iseq)[0]
+	*self.iseq = (*self.iseq)[1:]
+	return
+}
+
 func (self method_compiler) compile_instructions() {
-	iseq := self.ISeq()
-	for _, opcode := range iseq {
-		compiler := opcode_compilers[opcode]
+	var opcode int
+	var compiler opcode_compiler
+	for len(*self.iseq) > 0 {
+		opcode = self.shift_iseq()
+		compiler = opcode_compilers[opcode]
 		compiler(self)
 	}
 }
@@ -99,17 +114,17 @@ func (self method_compiler) self() (expr ast.Expr) {
 
 func (self method_compiler) pop() {
 	self.set_top(ast.NewIdent("nil"))
-	self.stack_used--
+	self.stack_top--
 }
 
 func (self method_compiler) push(expr ast.Expr) {
 	self.set_top(expr)
-	self.stack_used++
+	self.stack_top++
 }
 
 func (self method_compiler) set_top(expr ast.Expr) {
 	stmt := &ast.AssignStmt{
-		Lhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_used))},
+		Lhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_top))},
 		Rhs: []ast.Expr{expr},
 		Tok: token.ASSIGN,
 	}

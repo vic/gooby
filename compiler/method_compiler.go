@@ -97,14 +97,23 @@ func (self method_compiler) self() (expr ast.Expr) {
 	return
 }
 
-func (self method_compiler) push(expr ast.Expr) (stmt ast.Stmt) {
-	stmt = &ast.AssignStmt{
+func (self method_compiler) pop() {
+	self.set_top(ast.NewIdent("nil"))
+	self.stack_used--
+}
+
+func (self method_compiler) push(expr ast.Expr) {
+	self.set_top(expr)
+	self.stack_used++
+}
+
+func (self method_compiler) set_top(expr ast.Expr) {
+	stmt := &ast.AssignStmt{
 		Lhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_used))},
 		Rhs: []ast.Expr{expr},
 		Tok: token.ASSIGN,
 	}
-	self.stack_used++
-	return
+	self.append_stmt(stmt)
 }
 
 func (self method_compiler) append_stmt(stmt ast.Stmt) {

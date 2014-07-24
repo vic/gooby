@@ -18,7 +18,7 @@ func compile_push_int(self method_compiler) {
 }
 
 func compile_push_self(self method_compiler) {
-	self.append_stmt(self.push(self.self()))
+	self.push(self.self())
 }
 
 func compile_set_literal(self method_compiler) {
@@ -49,6 +49,7 @@ func compile_dup_many(self method_compiler) {
 }
 
 func compile_pop(self method_compiler) {
+	self.pop()
 }
 
 func compile_pop_many(self method_compiler) {

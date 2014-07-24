@@ -7,15 +7,13 @@ import (
 	"strconv"
 )
 
-type method_compiler struct{ rbc.Method }
-
-type stack_usage struct {
-	max  int
-	used int
+type method_compiler struct {
+	rbc.Method
+	stack_used int
+	body       *[]ast.Stmt
 }
 
 func (self method_compiler) compile() (f *ast.FuncDecl) {
-	su := &stack_usage{max: self.StackSize()}
 
 	params := []*ast.Field{}
 	returns := []*ast.Field{}
@@ -31,9 +29,8 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 		},
 	)
 
-	body := []ast.Stmt{self.local_var_decls(su)}
-	self.append_instructions(su, &body)
-	body = append(body, &ast.ReturnStmt{})
+	self.append_stmt(self.local_var_decls())
+	self.append_stmt(&ast.ReturnStmt{})
 
 	f = &ast.FuncDecl{
 		Name: ast.NewIdent(self.Name()),
@@ -54,18 +51,18 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 			},
 		},
 		Body: &ast.BlockStmt{
-			List: body,
+			List: *self.body,
 		},
 	}
 	return f
 }
 
-func (self method_compiler) local_var_decls(su *stack_usage) (decl ast.Stmt) {
-	if su.max < 1 {
+func (self method_compiler) local_var_decls() (decl ast.Stmt) {
+	if self.StackSize() < 1 {
 		return &ast.EmptyStmt{}
 	}
-	names := make([]*ast.Ident, su.max)
-	for i := 0; i < su.max; i++ {
+	names := make([]*ast.Ident, self.StackSize())
+	for i := 0; i < self.StackSize(); i++ {
 		names[i] = ast.NewIdent("rb" + strconv.Itoa(i))
 	}
 	names_spec := ast.ValueSpec{
@@ -82,10 +79,15 @@ func (self method_compiler) local_var_decls(su *stack_usage) (decl ast.Stmt) {
 	return
 }
 
-func (self method_compiler) append_instructions(su *stack_usage, body *[]ast.Stmt) {
+func (self method_compiler) append_stmt(stmt ast.Stmt) {
+	body := append(*self.body, stmt)
+	self.body = &body
+}
+
+func (self method_compiler) append_instructions() {
 	iseq := self.ISeq()
 	for _, opcode := range iseq {
 		compiler := opcode_compilers[opcode]
-		compiler(self, su, body)
+		compiler(self)
 	}
 }

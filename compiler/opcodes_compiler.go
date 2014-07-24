@@ -18,7 +18,7 @@ func compile_push_int(self method_compiler) {
 }
 
 func compile_push_self(self method_compiler) {
-
+	self.append_stmt(self.push(self.self()))
 }
 
 func compile_set_literal(self method_compiler) {

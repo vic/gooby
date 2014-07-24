@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	_ "fmt"
 	"github.com/vic/gooby/rbc"
 	"go/ast"
 	"go/token"
@@ -10,7 +11,7 @@ import (
 type method_compiler struct {
 	rbc.Method
 	stack_used int
-	body       []ast.Stmt
+	body       *[]ast.Stmt
 }
 
 func (self method_compiler) compile() (f *ast.FuncDecl) {
@@ -29,9 +30,9 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 		},
 	)
 
-	self.body = append(self.body, self.local_var_decls())
+	self.append_stmt(self.local_var_decls())
 	self.compile_instructions()
-	self.body = append(self.body, &ast.ReturnStmt{})
+	self.append_stmt(&ast.ReturnStmt{})
 
 	f = &ast.FuncDecl{
 		Name: ast.NewIdent(self.Name()),
@@ -52,7 +53,7 @@ func (self method_compiler) compile() (f *ast.FuncDecl) {
 			},
 		},
 		Body: &ast.BlockStmt{
-			List: self.body,
+			List: *self.body,
 		},
 	}
 	return f
@@ -86,4 +87,26 @@ func (self method_compiler) compile_instructions() {
 		compiler := opcode_compilers[opcode]
 		compiler(self)
 	}
+}
+
+func (self method_compiler) self() (expr ast.Expr) {
+	expr = &ast.CallExpr{
+		Fun:  ast.NewIdent("rt.self"),
+		Args: []ast.Expr{},
+	}
+	return
+}
+
+func (self method_compiler) push(expr ast.Expr) (stmt ast.Stmt) {
+	stmt = &ast.AssignStmt{
+		Lhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_used))},
+		Rhs: []ast.Expr{expr},
+		Tok: token.ASSIGN,
+	}
+	self.stack_used++
+	return
+}
+
+func (self method_compiler) append_stmt(stmt ast.Stmt) {
+	*self.body = append(*self.body, stmt)
 }

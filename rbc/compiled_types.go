@@ -14,6 +14,7 @@ type Method interface {
 	FileName() string
 	StackSize() int
 	ISeq() []int
+	Literal(int) compiled
 }
 
 type String interface {
@@ -48,6 +49,13 @@ func (self *compiled_method) ISeq() []int {
 		return is.opcodes
 	}
 	return []int{}
+}
+
+func (self *compiled_method) Literal(i int) (lit compiled) {
+	if tuple, ok := self.literals.(*compiled_tuple); ok {
+		lit = tuple.items[i]
+	}
+	return
 }
 
 func (self *compiled_symbol) String() string {

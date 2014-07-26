@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"github.com/vic/gooby/rbc"
 	"go/ast"
 	"go/token"
@@ -21,8 +20,12 @@ func new_method_compiler(method rbc.Method) (c *method_compiler) {
 	return
 }
 
-func (self *method_compiler) compile() (f *ast.FuncDecl) {
+func (self *method_compiler) name() (name string) {
+	name = "gooby_" + self.Method.Name()
+	return
+}
 
+func (self *method_compiler) compile() (f *ast.FuncDecl) {
 	params := []*ast.Field{}
 	returns := []*ast.Field{}
 
@@ -39,10 +42,9 @@ func (self *method_compiler) compile() (f *ast.FuncDecl) {
 
 	self.append_stmt(self.local_var_decls())
 	self.compile_instructions()
-	self.append_stmt(&ast.ReturnStmt{})
 
 	f = &ast.FuncDecl{
-		Name: ast.NewIdent(self.Name()),
+		Name: ast.NewIdent(self.name()),
 		Recv: &ast.FieldList{
 			List: []*ast.Field{
 				&ast.Field{
@@ -112,18 +114,12 @@ func (self *method_compiler) rt_(name string) (expr ast.Expr) {
 	return
 }
 
-func (self *method_compiler) pop() {
-	self.set_top(ast.NewIdent("nil"))
-	self.stack_top--
-}
-
 func (self *method_compiler) push(expr ast.Expr) {
 	self.set_top(expr)
 	self.stack_top++
 }
 
 func (self *method_compiler) set_top(expr ast.Expr) {
-	fmt.Println(self.stack_top)
 	stmt := &ast.AssignStmt{
 		Lhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_top))},
 		Rhs: []ast.Expr{expr},
@@ -132,23 +128,33 @@ func (self *method_compiler) set_top(expr ast.Expr) {
 	self.append_stmt(stmt)
 }
 
-func (self *method_compiler) ret() {
-	stmt := &ast.AssignStmt{
-		Lhs: []ast.Expr{ast.NewIdent("ret")},
-		Rhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_top))},
-		Tok: token.ASSIGN,
-	}
-	self.append_stmt(stmt)
-}
-
 func (self *method_compiler) literal(i int) (expr ast.Expr) {
+	args := []ast.Expr{}
+	literal := self.Method.Literal(i)
+	method := ""
+
+	if o, ok := literal.(rbc.String); ok {
+		method = "String"
+		args = append(args, &ast.BasicLit{
+			Value: `"` + o.HexBytes() + `"`,
+			Kind:  token.STRING,
+		}, &ast.BasicLit{
+			Value: `"` + o.Encoding() + `"`,
+			Kind:  token.STRING,
+		})
+	}
+
 	expr = &ast.CallExpr{
-		Fun:  ast.NewIdent("rt.__lit"),
-		Args: []ast.Expr{},
+		Fun:  ast.NewIdent("rt." + method + "Literal"),
+		Args: args,
 	}
 	return
 }
 
 func (self *method_compiler) append_stmt(stmt ast.Stmt) {
 	*self.body = append(*self.body, stmt)
+}
+
+func (self *method_compiler) append_expr(expr ast.Expr) {
+	self.append_stmt(&ast.ExprStmt{X: expr})
 }

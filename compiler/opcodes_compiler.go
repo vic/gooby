@@ -1,325 +1,340 @@
 package compiler
 
+import (
+	"go/ast"
+	"go/token"
+	"strconv"
+)
+
 type opcode_compiler func(self *method_compiler)
 
-func compile_noop(self *method_compiler) {
+func (self *method_compiler) noop() {
 }
 
-func compile_push_nil(self *method_compiler) {
+func (self *method_compiler) push_nil() {
 	self.push(self.rt_("Nil"))
 }
 
-func compile_push_true(self *method_compiler) {
+func (self *method_compiler) push_true() {
 	self.push(self.rt_("True"))
 }
 
-func compile_push_false(self *method_compiler) {
+func (self *method_compiler) push_false() {
 	self.push(self.rt_("False"))
 }
 
-func compile_push_int(self *method_compiler) {
+func (self *method_compiler) push_int() {
 }
 
-func compile_push_self(self *method_compiler) {
+func (self *method_compiler) push_self() {
 	self.push(self.rt_("Self"))
 }
 
-func compile_set_literal(self *method_compiler) {
+func (self *method_compiler) set_literal() {
 }
 
-func compile_push_literal(self *method_compiler) {
+func (self *method_compiler) push_literal() {
 	self.push(self.literal(self.shift_iseq()))
 }
 
-func compile_goto(self *method_compiler) {
+func (self *method_compiler) goto_() {
 }
 
-func compile_goto_if_false(self *method_compiler) {
+func (self *method_compiler) goto_if_false() {
 }
 
-func compile_goto_if_true(self *method_compiler) {
+func (self *method_compiler) goto_if_true() {
 }
 
-func compile_ret(self *method_compiler) {
-	self.ret()
+func (self *method_compiler) ret() {
+	stmt := &ast.AssignStmt{
+		Lhs: []ast.Expr{ast.NewIdent("res")},
+		Rhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_top))},
+		Tok: token.ASSIGN,
+	}
+	self.append_stmt(stmt)
+	self.append_stmt(&ast.ReturnStmt{})
 }
 
-func compile_swap_stack(self *method_compiler) {
+func (self *method_compiler) swap_stack() {
 }
 
-func compile_dup_top(self *method_compiler) {
+func (self *method_compiler) dup_top() {
 }
 
-func compile_dup_many(self *method_compiler) {
+func (self *method_compiler) dup_many() {
 }
 
-func compile_pop(self *method_compiler) {
-	self.pop()
+func (self *method_compiler) pop() {
+	self.set_top(ast.NewIdent("nil"))
+	self.stack_top--
 }
 
-func compile_pop_many(self *method_compiler) {
+func (self *method_compiler) pop_many() {
 }
 
-func compile_rotate(self *method_compiler) {
+func (self *method_compiler) rotate() {
 }
 
-func compile_move_down(self *method_compiler) {
+func (self *method_compiler) move_down() {
 }
 
-func compile_set_local(self *method_compiler) {
+func (self *method_compiler) set_local() {
 }
 
-func compile_push_local(self *method_compiler) {
+func (self *method_compiler) push_local() {
 }
 
-func compile_push_local_depth(self *method_compiler) {
+func (self *method_compiler) push_local_depth() {
 }
 
-func compile_set_local_depth(self *method_compiler) {
+func (self *method_compiler) set_local_depth() {
 }
 
-func compile_passed_arg(self *method_compiler) {
+func (self *method_compiler) passed_arg() {
 }
 
-func compile_push_current_exception(self *method_compiler) {
+func (self *method_compiler) push_current_exception() {
 }
 
-func compile_clear_exception(self *method_compiler) {
+func (self *method_compiler) clear_exception() {
 }
 
-func compile_push_exception_state(self *method_compiler) {
+func (self *method_compiler) push_exception_state() {
 }
 
-func compile_restore_exception_state(self *method_compiler) {
+func (self *method_compiler) restore_exception_state() {
 }
 
-func compile_raise_exc(self *method_compiler) {
+func (self *method_compiler) raise_exc() {
 }
 
-func compile_setup_unwind(self *method_compiler) {
+func (self *method_compiler) setup_unwind() {
 }
 
-func compile_pop_unwind(self *method_compiler) {
+func (self *method_compiler) pop_unwind() {
 }
 
-func compile_raise_return(self *method_compiler) {
+func (self *method_compiler) raise_return() {
 }
 
-func compile_ensure_return(self *method_compiler) {
+func (self *method_compiler) ensure_return() {
 }
 
-func compile_raise_break(self *method_compiler) {
+func (self *method_compiler) raise_break() {
 }
 
-func compile_reraise(self *method_compiler) {
+func (self *method_compiler) reraise() {
 }
 
-func compile_make_array(self *method_compiler) {
+func (self *method_compiler) make_array() {
 }
 
-func compile_cast_array(self *method_compiler) {
+func (self *method_compiler) cast_array() {
 }
 
-func compile_shift_array(self *method_compiler) {
+func (self *method_compiler) shift_array() {
 }
 
-func compile_set_ivar(self *method_compiler) {
+func (self *method_compiler) set_ivar() {
 }
 
-func compile_push_ivar(self *method_compiler) {
+func (self *method_compiler) push_ivar() {
 }
 
-func compile_push_const(self *method_compiler) {
+func (self *method_compiler) push_const() {
 }
 
-func compile_set_const(self *method_compiler) {
+func (self *method_compiler) set_const() {
 }
 
-func compile_set_const_at(self *method_compiler) {
+func (self *method_compiler) set_const_at() {
 }
 
-func compile_find_const(self *method_compiler) {
+func (self *method_compiler) find_const() {
 }
 
-func compile_push_cpath_top(self *method_compiler) {
+func (self *method_compiler) push_cpath_top() {
 }
 
-func compile_push_const_fast(self *method_compiler) {
+func (self *method_compiler) push_const_fast() {
 }
 
-func compile_find_const_fast(self *method_compiler) {
+func (self *method_compiler) find_const_fast() {
 }
 
-func compile_set_call_flags(self *method_compiler) {
+func (self *method_compiler) set_call_flags() {
 }
 
-func compile_allow_private(self *method_compiler) {
+func (self *method_compiler) allow_private() {
+	self.append_expr(self.rt_("AllowPrivate"))
 }
 
-func compile_send_method(self *method_compiler) {
+func (self *method_compiler) send_method() {
 }
 
-func compile_send_stack(self *method_compiler) {
+func (self *method_compiler) send_stack() {
 }
 
-func compile_send_stack_with_block(self *method_compiler) {
+func (self *method_compiler) send_stack_with_block() {
 }
 
-func compile_send_stack_with_splat(self *method_compiler) {
+func (self *method_compiler) send_stack_with_splat() {
 }
 
-func compile_send_super_stack_with_block(self *method_compiler) {
+func (self *method_compiler) send_super_stack_with_block() {
 }
 
-func compile_send_super_stack_with_splat(self *method_compiler) {
+func (self *method_compiler) send_super_stack_with_splat() {
 }
 
-func compile_push_block(self *method_compiler) {
+func (self *method_compiler) push_block() {
 }
 
-func compile_passed_blockarg(self *method_compiler) {
+func (self *method_compiler) passed_blockarg() {
 }
 
-func compile_create_block(self *method_compiler) {
+func (self *method_compiler) create_block() {
 }
 
-func compile_cast_for_single_block_arg(self *method_compiler) {
+func (self *method_compiler) cast_for_single_block_arg() {
 }
 
-func compile_cast_for_multi_block_arg(self *method_compiler) {
+func (self *method_compiler) cast_for_multi_block_arg() {
 }
 
-func compile_cast_for_splat_block_arg(self *method_compiler) {
+func (self *method_compiler) cast_for_splat_block_arg() {
 }
 
-func compile_yield_stack(self *method_compiler) {
+func (self *method_compiler) yield_stack() {
 }
 
-func compile_yield_splat(self *method_compiler) {
+func (self *method_compiler) yield_splat() {
 }
 
-func compile_string_append(self *method_compiler) {
+func (self *method_compiler) string_append() {
 }
 
-func compile_string_build(self *method_compiler) {
+func (self *method_compiler) string_build() {
 }
 
-func compile_string_dup(self *method_compiler) {
+func (self *method_compiler) string_dup() {
+	self.append_expr(self.rt_("StringDup"))
 }
 
-func compile_push_scope(self *method_compiler) {
+func (self *method_compiler) push_scope() {
 }
 
-func compile_add_scope(self *method_compiler) {
+func (self *method_compiler) add_scope() {
 }
 
-func compile_push_variables(self *method_compiler) {
+func (self *method_compiler) push_variables() {
 }
 
-func compile_check_interrupts(self *method_compiler) {
+func (self *method_compiler) check_interrupts() {
 }
 
-func compile_yield_debugger(self *method_compiler) {
+func (self *method_compiler) yield_debugger() {
 }
 
-func compile_is_nil(self *method_compiler) {
+func (self *method_compiler) is_nil() {
 }
 
-func compile_check_serial(self *method_compiler) {
+func (self *method_compiler) check_serial() {
 }
 
-func compile_check_serial_private(self *method_compiler) {
+func (self *method_compiler) check_serial_private() {
 }
 
-func compile_push_my_field(self *method_compiler) {
+func (self *method_compiler) push_my_field() {
 }
 
-func compile_store_my_field(self *method_compiler) {
+func (self *method_compiler) store_my_field() {
 }
 
-func compile_kind_of(self *method_compiler) {
+func (self *method_compiler) kind_of() {
 }
 
-func compile_instance_of(self *method_compiler) {
+func (self *method_compiler) instance_of() {
 }
 
-func compile_meta_push_neg_1(self *method_compiler) {
+func (self *method_compiler) meta_push_neg_1() {
 }
 
-func compile_meta_push_0(self *method_compiler) {
+func (self *method_compiler) meta_push_0() {
 }
 
-func compile_meta_push_1(self *method_compiler) {
+func (self *method_compiler) meta_push_1() {
 }
 
-func compile_meta_push_2(self *method_compiler) {
+func (self *method_compiler) meta_push_2() {
 }
 
-func compile_meta_send_op_plus(self *method_compiler) {
+func (self *method_compiler) meta_send_op_plus() {
 }
 
-func compile_meta_send_op_minus(self *method_compiler) {
+func (self *method_compiler) meta_send_op_minus() {
 }
 
-func compile_meta_send_op_equal(self *method_compiler) {
+func (self *method_compiler) meta_send_op_equal() {
 }
 
-func compile_meta_send_op_lt(self *method_compiler) {
+func (self *method_compiler) meta_send_op_lt() {
 }
 
-func compile_meta_send_op_gt(self *method_compiler) {
+func (self *method_compiler) meta_send_op_gt() {
 }
 
-func compile_meta_send_op_tequal(self *method_compiler) {
+func (self *method_compiler) meta_send_op_tequal() {
 }
 
-func compile_meta_send_call(self *method_compiler) {
+func (self *method_compiler) meta_send_call() {
 }
 
-func compile_push_my_offset(self *method_compiler) {
+func (self *method_compiler) push_my_offset() {
 }
 
-func compile_zsuper(self *method_compiler) {
+func (self *method_compiler) zsuper() {
 }
 
-func compile_push_block_arg(self *method_compiler) {
+func (self *method_compiler) push_block_arg() {
 }
 
-func compile_push_undef(self *method_compiler) {
+func (self *method_compiler) push_undef() {
 }
 
-func compile_push_stack_local(self *method_compiler) {
+func (self *method_compiler) push_stack_local() {
 }
 
-func compile_set_stack_local(self *method_compiler) {
+func (self *method_compiler) set_stack_local() {
 }
 
-func compile_push_has_block(self *method_compiler) {
+func (self *method_compiler) push_has_block() {
 }
 
-func compile_push_proc(self *method_compiler) {
+func (self *method_compiler) push_proc() {
 }
 
-func compile_check_frozen(self *method_compiler) {
+func (self *method_compiler) check_frozen() {
 }
 
-func compile_cast_multi_value(self *method_compiler) {
+func (self *method_compiler) cast_multi_value() {
 }
 
-func compile_invoke_primitive(self *method_compiler) {
+func (self *method_compiler) invoke_primitive() {
 }
 
-func compile_push_rubinius(self *method_compiler) {
+func (self *method_compiler) push_rubinius() {
 }
 
-func compile_call_custom(self *method_compiler) {
+func (self *method_compiler) call_custom() {
 }
 
-func compile_meta_to_s(self *method_compiler) {
+func (self *method_compiler) meta_to_s() {
 }
 
-func compile_push_type(self *method_compiler) {
+func (self *method_compiler) push_type() {
 }
 
-func compile_push_mirror(self *method_compiler) {
+func (self *method_compiler) push_mirror() {
 }

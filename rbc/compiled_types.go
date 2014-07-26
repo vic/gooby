@@ -1,6 +1,7 @@
 package rbc
 
 import (
+	"encoding/hex"
 	"fmt"
 )
 
@@ -15,12 +16,13 @@ type Method interface {
 	StackSize() int
 	ISeq() []int
 	Literal(int) compiled
+	LiteralCount() int
 }
 
 type String interface {
 	Bytes() []byte
 	Encoding() string
-	String() string
+	HexBytes() string
 }
 
 func (self *compiled_file) Version() int {
@@ -51,6 +53,13 @@ func (self *compiled_method) ISeq() []int {
 	return []int{}
 }
 
+func (self *compiled_method) LiteralCount() int {
+	if tuple, ok := self.literals.(*compiled_tuple); ok {
+		return len(tuple.items)
+	}
+	return 0
+}
+
 func (self *compiled_method) Literal(i int) (lit compiled) {
 	if tuple, ok := self.literals.(*compiled_tuple); ok {
 		lit = tuple.items[i]
@@ -58,8 +67,28 @@ func (self *compiled_method) Literal(i int) (lit compiled) {
 	return
 }
 
+func (self *compiled_symbol) Bytes() []byte {
+	return self.bytes
+}
+
+func (self *compiled_symbol) Encoding() string {
+	return self.encoding
+}
+
 func (self *compiled_symbol) String() string {
 	return fmt.Sprintf("%s", self.bytes)
+}
+
+func (self *compiled_string) Bytes() []byte {
+	return self.bytes
+}
+
+func (self *compiled_string) Encoding() string {
+	return self.encoding
+}
+
+func (self *compiled_string) HexBytes() string {
+	return hex.EncodeToString(self.bytes)
 }
 
 func (self *compiled_string) String() string {

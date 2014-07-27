@@ -234,7 +234,6 @@ func (self *method_compiler) string_build() {
 }
 
 func (self *method_compiler) string_dup() {
-	fmt.Println(self.stack_top)
 	self.set_top(self.rt_("StringDup", self.rb_top()))
 }
 

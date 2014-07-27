@@ -133,13 +133,18 @@ func (self *method_compiler) rb_top() ast.Expr {
 	return self.rb_n(self.stack_top)
 }
 
-func (self *method_compiler) set_top(expr ast.Expr) {
+func (self *method_compiler) assign(left ast.Expr, right ast.Expr) {
 	stmt := &ast.AssignStmt{
-		Lhs: []ast.Expr{self.rb_top()},
-		Rhs: []ast.Expr{expr},
+		Lhs: []ast.Expr{left},
+		Rhs: []ast.Expr{right},
 		Tok: token.ASSIGN,
 	}
 	self.append_stmt(stmt)
+
+}
+
+func (self *method_compiler) set_top(expr ast.Expr) {
+	self.assign(self.rb_top(), expr)
 }
 
 func (self *method_compiler) literal(i int) (expr ast.Expr) {

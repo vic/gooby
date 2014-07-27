@@ -186,6 +186,9 @@ func (self *method_compiler) send_stack() {
 		Args: ary,
 	}
 	self.set_top(expr)
+	for i := 0; i < n; i++ {
+		self.assign(self.rb_n(i+1+self.stack_top), ast.NewIdent("nil"))
+	}
 }
 
 func (self *method_compiler) send_stack_with_block() {

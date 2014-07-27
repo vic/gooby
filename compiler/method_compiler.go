@@ -16,7 +16,7 @@ type method_compiler struct {
 
 func new_method_compiler(method rbc.Method) (c *method_compiler) {
 	iseq := method.ISeq()[:]
-	c = &method_compiler{method, 0, &[]ast.Stmt{}, &iseq}
+	c = &method_compiler{method, -1, &[]ast.Stmt{}, &iseq}
 	return
 }
 
@@ -97,31 +97,45 @@ func (self *method_compiler) shift_iseq() (val int) {
 }
 
 func (self *method_compiler) compile_instructions() {
-	var opcode int
-	var compiler opcode_compiler
 	for len(*self.iseq) > 0 {
-		opcode = self.shift_iseq()
-		compiler = opcode_compilers[opcode]
+		opcode := self.shift_iseq()
+		compiler := opcode_compilers[opcode]
 		compiler(self)
 	}
 }
 
-func (self *method_compiler) rt_(name string) (expr ast.Expr) {
+func (self *method_compiler) rt_(name string, args ...ast.Expr) (expr ast.Expr) {
 	expr = &ast.CallExpr{
 		Fun:  ast.NewIdent("rt." + name),
-		Args: []ast.Expr{},
+		Args: args,
 	}
 	return
 }
 
 func (self *method_compiler) push(expr ast.Expr) {
-	self.set_top(expr)
 	self.stack_top++
+	self.set_top(expr)
+}
+
+func (self *method_compiler) rb_n(n int) ast.Expr {
+	return ast.NewIdent("rb" + strconv.Itoa(n))
+}
+
+func (self *method_compiler) rb_many(n int) (ary []ast.Expr) {
+	ary = make([]ast.Expr, n)
+	for i := 0; i < n; i++ {
+		ary[i] = self.rb_top()
+	}
+	return
+}
+
+func (self *method_compiler) rb_top() ast.Expr {
+	return self.rb_n(self.stack_top)
 }
 
 func (self *method_compiler) set_top(expr ast.Expr) {
 	stmt := &ast.AssignStmt{
-		Lhs: []ast.Expr{ast.NewIdent("rb" + strconv.Itoa(self.stack_top))},
+		Lhs: []ast.Expr{self.rb_top()},
 		Rhs: []ast.Expr{expr},
 		Tok: token.ASSIGN,
 	}
@@ -133,13 +147,22 @@ func (self *method_compiler) literal(i int) (expr ast.Expr) {
 	literal := self.Method.Literal(i)
 	method := ""
 
-	if o, ok := literal.(rbc.String); ok {
+	var s rbc.String
+	switch o := literal.(type) {
+	case rbc.String:
 		method = "String"
+		s = o
+	case rbc.Symbol:
+		method = "Symbol"
+		s = o
+	}
+
+	if method == "String" || method == "Symbol" {
 		args = append(args, &ast.BasicLit{
-			Value: `"` + o.HexBytes() + `"`,
+			Value: `"` + s.HexBytes() + `"`,
 			Kind:  token.STRING,
 		}, &ast.BasicLit{
-			Value: `"` + o.Encoding() + `"`,
+			Value: `"` + s.Encoding() + `"`,
 			Kind:  token.STRING,
 		})
 	}

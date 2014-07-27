@@ -1,6 +1,6 @@
 package compiler
 
-var opcode_compilers = []opcode_compiler{
+var opcode_compilers = []func(*method_compiler){
 	(*method_compiler).noop,
 	(*method_compiler).push_nil,
 	(*method_compiler).push_true,

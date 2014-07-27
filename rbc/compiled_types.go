@@ -25,6 +25,11 @@ type String interface {
 	HexBytes() string
 }
 
+type Symbol interface {
+	String
+	isSymbol() bool
+}
+
 func (self *compiled_file) Version() int {
 	return self.version
 }
@@ -73,6 +78,10 @@ func (self *compiled_symbol) Bytes() []byte {
 
 func (self *compiled_symbol) Encoding() string {
 	return self.encoding
+}
+
+func (self *compiled_symbol) isSymbol() bool {
+	return true
 }
 
 func (self *compiled_symbol) String() string {

@@ -1,12 +1,11 @@
 package compiler
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"strconv"
 )
-
-type opcode_compiler func(self *method_compiler)
 
 func (self *method_compiler) noop() {
 }
@@ -174,6 +173,19 @@ func (self *method_compiler) send_method() {
 }
 
 func (self *method_compiler) send_stack() {
+	lit := self.Method.Literal(self.shift_iseq())
+	n := self.shift_iseq()
+	ary := self.rb_many(n)
+	self.stack_top = self.stack_top - n
+	obj := []ast.Expr{
+		self.rb_n(self.stack_top),
+		&ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf(`"%s"`, lit)},
+	}
+	expr := &ast.CallExpr{
+		Fun:  self.rt_("SendStack", obj...),
+		Args: ary,
+	}
+	self.set_top(expr)
 }
 
 func (self *method_compiler) send_stack_with_block() {
@@ -219,7 +231,8 @@ func (self *method_compiler) string_build() {
 }
 
 func (self *method_compiler) string_dup() {
-	self.append_expr(self.rt_("StringDup"))
+	fmt.Println(self.stack_top)
+	self.set_top(self.rt_("StringDup", self.rb_top()))
 }
 
 func (self *method_compiler) push_scope() {

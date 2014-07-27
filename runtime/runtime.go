@@ -16,7 +16,7 @@ type Runtime interface {
 	StringDup(Object) Object
 	AllowPrivate()
 	True() Object
-	SendStack(Object, string) func(...Object) Object
+	SendSite(Object, string) func(...Object) Object
 }
 
 type runtime struct {
@@ -39,7 +39,7 @@ func (rt *runtime) True() Object {
 	return nil
 }
 
-func (rt *runtime) SendStack(obj Object, sym string) func(...Object) Object {
+func (rt *runtime) SendSite(obj Object, sym string) func(...Object) Object {
 	return func(args ...Object) Object {
 		fmt.Println(args)
 		return nil

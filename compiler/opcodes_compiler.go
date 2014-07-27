@@ -182,7 +182,7 @@ func (self *method_compiler) send_stack() {
 		&ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf(`"%s"`, lit)},
 	}
 	expr := &ast.CallExpr{
-		Fun:  self.rt_("SendStack", obj...),
+		Fun:  self.rt_("SendSite", obj...),
 		Args: ary,
 	}
 	self.set_top(expr)
